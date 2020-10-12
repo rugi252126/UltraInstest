@@ -13,4 +13,4 @@ It is user-friendly as it is developed in GUI form and also very flexible to ada
 
 
 
-https://github.com/rugi252126/UltraInstest/MainWindow.jpg
+![alt text](https://github.com/rugi252126/UltraInstest/MainWindow.jpg)
