@@ -5,13 +5,19 @@ from __future__ import print_function
 # import the necessary packages
 import tkinter as tk
 from tkinter import ttk
+from tkinter import messagebox as msg
 from userinterface.gui.subwindow import PopUpWindow
-import openpyxl
+from utilities.excel import Excel
+
+POPUP_WIN_WIDTH = 260
+POPUP_WIN_HEIGHT = 110
 
 
-class Project(PopUpWindow):
+class Project(PopUpWindow, Excel):
     def __init__(self, parent):
-        super().__init__(parent)
+        # initialize the parent class
+        PopUpWindow.__init__(self,parent)
+        Excel.__init__(self)
         self.variant = "NA"
         self.carline = "NA"
         self.position = "NA"
@@ -21,60 +27,48 @@ class Project(PopUpWindow):
         self.ccb_variant_idx = 0
         self.ccb_carline_idx = 0
         self.ccb_position_idx = 0
-        self.popup_win_status = False
+        self.prj_cfg_win_status = False
+        #print(Project.__mro__)
 
-    def on_variant(self, event):
-        # get and assign the selected value
-        self.variant = self.ccb_variant.get()
-        # get and assign the corresponding index
-        self.ccb_variant_idx = self.ccb_variant.current()
-
-    def on_carline(self, event):
-        # get and assign the selected value
-        self.carline = self.ccb_carline.get()
-        # get and assign the corresponding index
-        self.ccb_carline_idx = self.ccb_carline.current()
-
-    def on_position(self, event):
-        # get and assign the selected value
-        self.position = self.ccb_position.get()
-        # get and assign the corresponding index
-        self.ccb_position_idx = self.ccb_position.current()
-
-    def on_closing_window(self):
+    def on_closing_prj_cfg_window(self):
         # clear the flag as popup window is destroyed
-        self.popup_win_status = False
-        ivar = super().get_ivar()
+        self.prj_cfg_win_status = False
+        ivar = PopUpWindow.get_popup_win_ivar(self)
         ivar.destroy()
 
-    def get_cell_Value(self, actv_sheet, col_name="A"):
-        # take individual value from cells
-        a = []
-        # excluding the first row(header)
-        for row in range(2, actv_sheet.max_row + 1):
-            # specify the column coverage
-            for column in col_name:
-                cell_name = "{}{}".format(column, row)
-                if actv_sheet[cell_name].value is not None:
-                    a.append(actv_sheet[cell_name].value)
+    def on_cancel_prj_bttn(self):
+        ans = msg.askyesno("", "Discard changes?")
+        if ans:
+            self.on_closing_prj_cfg_window()
 
-        return a
+    def on_accept_prj_bttn(self):
+        # get and assign the selected value
+        self.variant = self.ccb_variant.get()
+        self.carline = self.ccb_carline.get()
+        self.position = self.ccb_position.get()
+        # get and assign the corresponding index
+        self.ccb_variant_idx = self.ccb_variant.current()
+        self.ccb_carline_idx = self.ccb_carline.current()
+        self.ccb_position_idx = self.ccb_position.current()
 
     def on_project_settings(self):
         # create a popup window if it is not yet created
-        if not self.popup_win_status:
-            self.popup_win_status = True
+        if not self.prj_cfg_win_status:
+            self.prj_cfg_win_status = True
 
             # create a new window
-            super().popup_window("Project Settings", 260, 90)
+            PopUpWindow.popup_window(self, "Project Settings", POPUP_WIN_WIDTH, POPUP_WIN_HEIGHT)
             # get the instance of the newly created window
-            ivar = super().get_ivar()
+            ivar = PopUpWindow.get_popup_win_ivar(self)
+            # create buttons
+            self.cancel_prj_bttn(ivar)
+            self.accept_prj_bttn(ivar)
             # set the window's background color
             ivar.configure(background="skyblue")
             # make access to excel file
-            xls = openpyxl.load_workbook('../../Resources/Project_Information.xlsx', data_only=True)
+            Excel.load_file(self)
             # read specific sheet from excel file
-            ps = xls["PROJECT_CONFIG"]
+            Excel.read_sheet(self, "PROJECT_CONFIG")
 
             # add label for project variant information
             lbl_var = tk.Label(ivar, text="Project Variant: ", width=14, bg = 'skyblue', font=('Arial', 12), anchor="e")
@@ -82,13 +76,13 @@ class Project(PopUpWindow):
             # add combobox for project variant options
             self.ccb_variant = ttk.Combobox(ivar, width=14, state='readonly')
             # assign the values to combobox
-            self.ccb_variant['values'] = self.get_cell_Value(ps, "A")
+            self.ccb_variant['values'] = Excel.get_cell_value(self)
             self.ccb_variant.grid(column=1, row=0)
             # set the current position/value of the combobox
             self.ccb_variant.current(self.ccb_variant_idx)
             # bind the calback function
             # this will be called everytime the value is changed
-            self.ccb_variant.bind("<<ComboboxSelected>>", self.on_variant)
+            # self.ccb_variant.bind("<<ComboboxSelected>>", self.on_variant)
 
             # add label for carline information
             lbl_carline = tk.Label(ivar, text="Carline: ", width=14, bg = 'skyblue', font=('Arial', 12), anchor="e")
@@ -96,13 +90,10 @@ class Project(PopUpWindow):
             # add combobox for project variant options
             self.ccb_carline = ttk.Combobox(ivar, width=14, state='readonly')
             # assign the values to combobox
-            self.ccb_carline['values'] = self.get_cell_Value(ps, "B")
+            self.ccb_carline['values'] = Excel.get_cell_value(self, "B")
             self.ccb_carline.grid(column=1, row=1)
             # set the current position/value of the combobox
             self.ccb_carline.current(self.ccb_carline_idx)
-            # bind the calback function
-            # this will be called everytime the value is changed
-            self.ccb_carline.bind("<<ComboboxSelected>>", self.on_carline)
 
             # add label for position information
             lbl_pos = tk.Label(ivar, text="Position: ", width=14, bg = 'skyblue', font=('Arial', 12), anchor="e")
@@ -110,16 +101,23 @@ class Project(PopUpWindow):
             # add combobox for project variant options
             self.ccb_position = ttk.Combobox(ivar, width=14, state='readonly')
             # assign the values to combobox
-            self.ccb_position['values'] = self.get_cell_Value(ps, "C")
+            self.ccb_position['values'] = Excel.get_cell_value(self, "C")
             self.ccb_position.grid(column=1, row=2)
             # set the current position/value of the combobox
             self.ccb_position.current(self.ccb_position_idx)
-            # bind the calback function
-            # this will be called everytime the value is changed
-            self.ccb_position.bind("<<ComboboxSelected>>", self.on_position)
 
             # do a proper exit of a popup window
-            ivar.protocol("WM_DELETE_WINDOW", self.on_closing_window)
+            ivar.protocol("WM_DELETE_WINDOW", self.on_closing_prj_cfg_window)
+
+    def cancel_prj_bttn(self, ivar):
+        b_cancel = tk.Button(ivar, text="Cancel", command=self.on_cancel_prj_bttn, font=('Arial', 10, 'normal'),
+                          height=1, width=7, fg='Black')
+        b_cancel.place(x=(POPUP_WIN_WIDTH//2), y=POPUP_WIN_HEIGHT-30)
+
+    def accept_prj_bttn(self, ivar):
+        b_accept = tk.Button(ivar, text="Accept", command=self.on_accept_prj_bttn, font=('Arial', 10, 'normal'),
+                          height=1, width=7, fg='Black')
+        b_accept.place(x=(POPUP_WIN_WIDTH//2) - 60, y=POPUP_WIN_HEIGHT-30)
 
     def get_variant(self):
         return self.variant

@@ -3,10 +3,8 @@ from __future__ import absolute_import
 from __future__ import print_function
 
 # import the necessary packages
-from tkinter import *
-from tkinter import PhotoImage
+import tkinter as tk
 from tkinter import messagebox as msg
-import tkinter.font as font
 from userinterface.gui.subwindow import ConsoleWindow
 from userinterface.gui.menubar import MenuBar
 from userinterface.app.workspace import Workspace
@@ -37,11 +35,11 @@ class MainWindow:
 
         # instances
         menu_bar_ivar = MenuBar(parent)
-        tst = Test(self.parent)
+        self.tst = Test(self.parent)
         ws = Workspace(self.parent)
         ci = CommunicationInterface(self.parent)
         self.prj = Project(self.parent)
-        env = TestEnvironment(self.parent)
+        self.env = TestEnvironment(self.parent)
         rpt = Report(self.parent)
         info = Help(self.parent)
 
@@ -49,10 +47,10 @@ class MainWindow:
         self.file_menu(menu_bar_ivar)
         self.view_menu(menu_bar_ivar)
         ws.workspace_menu(menu_bar_ivar)
-        tst.test_menu(menu_bar_ivar)
+        self.tst.test_menu(menu_bar_ivar)
         self.prj.project_menu(menu_bar_ivar)
         ci.com_menu(menu_bar_ivar)
-        env.environment_menu(menu_bar_ivar)
+        self.env.environment_menu(menu_bar_ivar)
         rpt.report_menu(menu_bar_ivar)
         info.help_menu(menu_bar_ivar)
         # buttons
@@ -78,12 +76,12 @@ class MainWindow:
         self.parent.geometry('%dx%d+%d+%d' % (self.win_width, self.win_height, s_x, s_y))
 
         # change the default window's logo and add our logo
-        photo = PhotoImage(file='../../Icon/ultrainstest_logo.png')
+        photo = tk.PhotoImage(file='../../Icon/ultrainstest_logo.png')
         self.parent.iconphoto(False, photo)
 
         # add background image
-        background_image = PhotoImage(file='../../Icon/background.png')
-        background_label = Label(self.parent, image=background_image)
+        background_image = tk.PhotoImage(file='../../Icon/background.png')
+        background_label = tk.Label(self.parent, image=background_image)
         # keep the reference of the image otherwise
         # it will destroy by garbage collector
         background_label.photo = background_image
@@ -103,10 +101,7 @@ class MainWindow:
         ans = msg.askyesno("", "Start testing?")
         if ans:
             # start testing
-            print(self.prj.get_variant())
-            print(self.prj.get_carline())
-            print(self.prj.get_position())
-            self.cs.add_console_info("Hello World!")
+            pass
 
     def on_stop(self):
         # pop-up message box
@@ -118,18 +113,33 @@ class MainWindow:
     def on_console_window(self):
         self.cs.show_console_window()
 
+    def on_test_info(self):
+        self.cs.add_console_info("Test Information")
+        self.cs.add_console_info("Variant: " + self.prj.get_variant())
+        self.cs.add_console_info("Carline: " + self.prj.get_carline())
+        self.cs.add_console_info("Position: " + self.prj.get_position())
+        self.cs.add_console_info("Test Type: " + self.tst.get_test_type())
+        stat = "AVAILABLE" if self.env.get_oscilloscope_status() else "NOT AVAILABLE"
+        self.cs.add_console_info("Oscilloscope: " + stat)
+        stat = "AVAILABLE" if self.env.get_logic_analyzer_status() else "NOT AVAILABLE"
+        self.cs.add_console_info("Logic Analyzer: " + stat)
+        stat = "AVAILABLE" if self.env.get_power_supply_status() else "NOT AVAILABLE"
+        self.cs.add_console_info("Power Supply: " + stat)
+        stat = "AVAILABLE" if self.env.get_debugger_status() else "NOT AVAILABLE"
+        self.cs.add_console_info("Debugger: " + stat)
+
     def exit_button(self):
-        b_exit = Button(self.parent, text="Exit", command=self.on_exit, font=('Arial', 14, 'normal'),
+        b_exit = tk.Button(self.parent, text="Exit", command=self.on_exit, font=('Arial', 14, 'normal'),
                         height=1, width=10, fg='Black')
         b_exit.place(x=((self.win_width // 2) - 184), y=self.win_height - 70)
 
     def start_button(self):
-        b_start = Button(self.parent, text="Start", command=self.on_start, font=('Arial', 14, 'normal'),
+        b_start = tk.Button(self.parent, text="Start", command=self.on_start, font=('Arial', 14, 'normal'),
                         height=1, width=10, fg='Black')
         b_start.place(x=((self.win_width // 2) - 62), y=self.win_height - 70)
 
     def stop_button(self):
-        b_start = Button(self.parent, text="Stop", command=self.on_stop, font=('Arial', 14, 'normal'),
+        b_start = tk.Button(self.parent, text="Stop", command=self.on_stop, font=('Arial', 14, 'normal'),
                         height=1, width=10, fg='Black')
         b_start.place(x=((self.win_width // 2) + 60), y=self.win_height - 70)
 
@@ -142,10 +152,12 @@ class MainWindow:
     def view_menu(self, mb_ivar):
         mb_ivar.create_new_menu("View")
         mb_ivar.add_new_command('Console Window', self.on_console_window)
+        mb_ivar.add_command_separator()
+        mb_ivar.add_new_command('Test Info', self.on_test_info)
 
 
 def main():
-    root = Tk()
+    root = tk.Tk()
     MainWindow(root)
     root.mainloop()
 

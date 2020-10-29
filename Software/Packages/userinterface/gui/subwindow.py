@@ -3,9 +3,7 @@ from __future__ import absolute_import
 from __future__ import print_function
 
 # import the necessary packages
-from tkinter import *
 import tkinter as tk
-from tkinter import Toplevel
 from tkinter import scrolledtext
 
 
@@ -30,7 +28,7 @@ class ConsoleWindow:
         y = self.parent.winfo_y()
 
         # create an instance of toplevel window
-        self.console_win = Toplevel(self.parent)
+        self.console_win = tk.Toplevel(self.parent)
         self.console_win.transient(self.parent)
         self.console_win.title("Console")
         self.console_win.configure(background="White")
@@ -47,15 +45,16 @@ class ConsoleWindow:
         self.scrolled_console()
 
     def scrolled_console(self):
-        self.scrolled_text = scrolledtext.ScrolledText(self.console_win, width=108, height=27, wrap=WORD)
+        self.scrolled_text = scrolledtext.ScrolledText(self.console_win, width=87, height=18, wrap=tk.WORD,
+                                                       bg='lightblue', font=("Times New Roman", 11))
         #self.scrolled_text.configure(state=DISABLED)
         self.scrolled_text.place(x=0, y=0)
 
     def add_console_info(self, text=""):
         # make sure window exists
         if self.console_win.winfo_exists():
-            self.scrolled_text.insert(INSERT, text)
-            #self.scrolled_text.insert(END, " in ScrolledText")
+            self.scrolled_text.insert(tk.INSERT, text + "\n")
+            #self.scrolled_text.insert(END, "")
 
     # whenever the position of main window has changed, the toplevel console window follows it
     def follow_me_console_window(self, event):
@@ -70,26 +69,26 @@ class ConsoleWindow:
 
 class PopUpWindow:
     def __init__(self, parent):
-        self.parent = parent
-        self.popup_win = None
+        self.__parent = parent
+        self.__popup_win = None
 
     def popup_window(self, str_win_name, w=900, h=900):
         # create an instance of toplevel window
-        self.popup_win = Toplevel(self.parent)
-        self.popup_win.transient(self.parent)
-        self.popup_win.title(str_win_name)
+        self.__popup_win = tk.Toplevel(self.__parent)
+        self.__popup_win.transient(self.__parent)
+        self.__popup_win.title(str_win_name)
 
-        self.popup_win.geometry('+{}+{}'.format(0, 0))
-        self.popup_win.minsize(w, h)
-        self.popup_win.maxsize(w, h)
+        self.__popup_win.geometry('+{}+{}'.format(0, 0))
+        self.__popup_win.minsize(w, h)
+        self.__popup_win.maxsize(w, h)
         # disable the resizing of window's width and height
-        self.popup_win.resizable(False, False)
+        self.__popup_win.resizable(False, False)
         # add window's logo
-        photo = PhotoImage(file='../../Icon/ultrainstest_logo.png')
-        self.popup_win.iconphoto(False, photo)
+        photo = tk.PhotoImage(file='../../Icon/ultrainstest_logo.png')
+        self.__popup_win.iconphoto(False, photo)
 
-    def get_ivar(self):
-        return self.popup_win
+    def get_popup_win_ivar(self):
+        return self.__popup_win
 
 
 def main():
